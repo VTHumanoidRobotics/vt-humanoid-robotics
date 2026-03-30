@@ -168,7 +168,7 @@ If you're new to reinforcement learning, check out these resources to get starte
 
 - [**Kelly's HSSP RL Research Demos**](https://github.com/kelly-castillo/hssp-rl-research) — 5 interactive RL demos built with CleanRL during the Hokie Summer Scholars Program. Great starting point for understanding PPO, curriculum learning, multi-agent RL, safe RL, and exploration strategies.
 - [Gymnasium Documentation](https://gymnasium.farama.org/) — the standard RL environment API
-- [Stable Baselines3 Docs](https://stable-baselines3.readthedocs.io/) — reliable RL algorithm implementations
+- [Stable Baselines3 Docs](https://sb3-contrib.readthedocs.io/en/master/) — reliable RL algorithm implementations
 - [Spinning Up in Deep RL](https://spinningup.openai.com/) — OpenAI's intro to deep RL (excellent theory + code)
 - [CleanRL](https://github.com/vwxyzjn/cleanrl) — single-file RL implementations, great for reading and understanding algorithms
 
