@@ -193,4 +193,4 @@ This repo is maintained by the Controls & Software subteam. If you're a team mem
 3. Push and open a pull request
 4. Get at least one review before merging
 
-Questions? Reach out in the team Slack.
+Questions? Reach out in the Controls/Software Channel or Kelly Castillo on Slack.
