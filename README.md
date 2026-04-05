@@ -49,7 +49,7 @@ conda --version   # should print something like conda 24.x.x
 ### 3. Create the conda environment
 
 ```bash
-conda create -yn berkeley-humanoid-lite python=3.10
+conda create -yn berkeley-humanoid-lite python=3.11
 conda activate berkeley-humanoid-lite
 ```
 
