@@ -1,4 +1,5 @@
-# VT Humanoid Robotics — Controls & Software
+# VT Humanoid Robotics — Controls & Software: Reinforcement Learning & Policy
+
 
 > Forked from [Berkeley Humanoid Lite](https://github.com/HybridRobotics/Berkeley-Humanoid-Lite) by UC Berkeley's Hybrid Robotics Lab.
 
@@ -111,14 +112,7 @@ pip install "gymnasium[box2d]"             # LunarLander, BipedalWalker
 python -c "import berkeley_humanoid_lite; print('Berkeley Humanoid Lite OK')"
 
 # Test that Gymnasium + SB3 work
-python -c "
-from stable_baselines3 import PPO
-import gymnasium as gym
-env = gym.make('CartPole-v1')
-model = PPO('MlpPolicy', env, verbose=1)
-model.learn(total_timesteps=10000)
-print('All good!')
-"
+python -c "from stable_baselines3 import PPO; import gymnasium as gym; env = gym.make('CartPole-v1'); model = PPO('MlpPolicy', env, verbose=1); model.learn(total_timesteps=10000); print('All good!')"
 ```
 
 ---
