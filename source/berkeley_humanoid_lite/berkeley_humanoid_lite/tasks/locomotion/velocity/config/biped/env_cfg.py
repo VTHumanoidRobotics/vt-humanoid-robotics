@@ -231,7 +231,7 @@ class RewardsCfg:
         weight=-0.1,
     )
 
-    # Penalizes the robot for touching the ground with anything except feet
+    # Penalizes the robot for touching the ground with any limbs except feet
     # Category: Safety/constraint
     # Priority: Medium (Weight = -1.0)
     undesired_contacts = RewTerm(
@@ -243,12 +243,20 @@ class RewardsCfg:
         weight=-1.0,
     )
 
-    # penalize deviation from default of the joints that are not essential for locomotion
+    # Penalizes the robot when hip joints deviate from default positioning
+    # This helps keep the legs aligned and pointing forward under the body.
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -0.2)
     joint_deviation_hip = RewTerm(
         func=mdp.joint_deviation_l1,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_yaw_joint", ".*_hip_roll_joint"])},
         weight=-0.2,
     )
+
+    # Penalizes the robot when ankle joints deviate from default positioning
+    # NOTE: This is NOT a joint that is present on the 3ft URDF robot model
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -0.2)
     joint_deviation_ankle_roll = RewTerm(
         func=mdp.joint_deviation_l1,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_ankle_roll_joint"])},
