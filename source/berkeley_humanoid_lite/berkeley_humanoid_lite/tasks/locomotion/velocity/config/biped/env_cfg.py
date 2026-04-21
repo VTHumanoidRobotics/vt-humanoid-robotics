@@ -283,6 +283,8 @@ class EventsCfg:
     """Configuration for events."""
 
     # === Startup behaviors ===
+    # Randomizes the static/dynamic friction (0.4 to 1.2) on startup,
+    # which allows the sim2real to account for variations in material
     physics_material = EventTerm(
         func=mdp.randomize_rigid_body_material,
         params={
@@ -294,6 +296,9 @@ class EventsCfg:
         },
         mode="startup",
     )
+
+    # Randomizes the mass of the torso/base on startup so the sim2real
+    # can account for slight variations in the mass (-1.0 to +2.0 kg added)
     add_base_mass = EventTerm(
         func=mdp.randomize_rigid_body_mass,
         params={
@@ -303,6 +308,9 @@ class EventsCfg:
         },
         mode="startup",
     )
+    
+    # Slightly randomizes the default positions of the joint on startup to help the 
+    # simulation account for joint misalignment during calibration/assembly (-0.05 to +0.05)
     add_all_joint_default_pos = EventTerm(
         func=mdp.randomize_joint_default_pos,
         params={
@@ -312,6 +320,9 @@ class EventsCfg:
         },
         mode="startup",
     )
+
+    # Randomizes all the actuators' stiffness and damping parameters on startup to help the
+    # simulation be accustomed to differences in PD gains due to differing actuators (0.8 to 1.2)
     scale_all_actuator_torque_constant = EventTerm(
         func=mdp.randomize_actuator_gains,
         params={
@@ -324,6 +335,7 @@ class EventsCfg:
     )
 
     # === Reset behaviors ===
+    # Slightly varies x, y, and yaw starting positions (xy = -0.5 to +0.5m)
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,
         params={
