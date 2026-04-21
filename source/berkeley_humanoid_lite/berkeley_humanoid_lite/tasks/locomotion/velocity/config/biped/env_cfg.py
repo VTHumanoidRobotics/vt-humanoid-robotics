@@ -106,12 +106,21 @@ class RewardsCfg:
     """Reward terms for the MDP."""
 
     # === Reward for task-space performance ===
-    # command tracking performance
+    
+    # Calculates how well the robot conforms to the commanded linear/forward velocity.
+    # Returns +1.0 for perfect tracking (Error = 0)
+    # Category: Task
+    # Priority: High (Weight = +2.0)
     track_lin_vel_xy_exp = RewTerm(
         func=mdp.track_lin_vel_xy_yaw_frame_exp,
         params={"command_name": "base_velocity", "std": 0.25},
         weight=2.0,
     )
+
+    # Calculates how well the robot conforms to the commanded yaw/spin velocity.
+    # Returns +1.0 for perfect tracking (Error = 0)
+    # Category: Task
+    # Priority: Medium (Weight = +1.0)
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_world_exp,
         params={"command_name": "base_velocity", "std": 0.25},
@@ -119,49 +128,86 @@ class RewardsCfg:
     )
 
     # === Reward for basic behaviors ===
-    # termination penalty
+    # A massive penalty for when the robot terminates an episode early (falling)
+    # Administers a -10.0 penalty, which allows the robot to learn this is the
+    # worst scenario and needs to be avoided.
+    # Category: Safety/constraint
+    # Priority: Highest (Weight = -10.0)
     termination_penalty = RewTerm(
         func=mdp.is_terminated,
         weight=-10.0,
     )
 
-    # base motion smoothness
+    # Measures the velocity on the z-axis (vertical bouncing/movement)
+    # Administers a -0.1 penalty to encourage motion at constant height
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -1.0)
     lin_vel_z_l2 = RewTerm(
         func=mdp.lin_vel_z_l2,
         weight=-0.1,
     )
+
+    # Measures the angular velocity on the xy-plane (wobbling)
+    # Applies a -0.05 penalty to encourage non-wobbly motion
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -0.05)
     ang_vel_xy_l2 = RewTerm(
         func=mdp.ang_vel_xy_l2,
         weight=-0.05,
     )
-    # ensure the robot is standing upright
+
+    # Measures the tilt of the robot's body. Applies a strong -2.0 penalty
+    # to ensure the robot stays upright (centers mass, helps prevent falling)
+    # Category: Safety/constraint
+    # Priority: High (Weight = -2.0)
     flat_orientation_l2 = RewTerm(
         func=mdp.flat_orientation_l2,
         weight=-2.0,
     )
 
-    # joint motion smoothness
+    # Penalizes rapid changes in the robot's actions
+    # Helps minimize jitteriness, encourages smoother movements
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -0.01)
     action_rate_l2 = RewTerm(
         func=mdp.action_rate_l2,
         weight=-0.01,
     )
+
+    # Penalizes high torques at the joints in order to encourage
+    # energy efficiency and protect hardware/3D-printed material.
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -0.002)
     dof_torques_l2 = RewTerm(
         func=mdp.joint_torques_l2,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=HUMANOID_LITE_LEG_JOINTS)},
         weight=-2.0e-3,
     )
+
+    # Penalizes high acceleration at the joints in order to reduce
+    # stress on hardware/3D-printed gears and encourage smoother joint motion.
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -1e-6)
     dof_acc_l2 = RewTerm(
         func=mdp.joint_acc_l2,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=HUMANOID_LITE_LEG_JOINTS)},
         weight=-1.0e-6,
     )
+
+    # Penalizes when the joints are near the position limits
+    # This encourages the robot to stay away from mechanical stops.
+    # Category: Safety/constraint
+    # Priority: Medium (Weight = -1.0)
     dof_pos_limits = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
     )
 
     # === Reward for encouraging behaviors ===
-    # encourage robot to take steps
+    # Rewards the robot for having a natural stance when walking (1 leg up, 1 leg down)
+    # Requires one leg to be in air for at least 0.4s. Inactive when stationary.
+    # Category: Task
+    # Priority: Medium (Weight = +1.0)
     feet_air_time = RewTerm(
         func=mdp.feet_air_time_positive_biped,
         params={
@@ -171,7 +217,11 @@ class RewardsCfg:
         },
         weight=1.0,
     )
-    # penalize feet sliding on the ground to exploit physics sim inaccuracies
+    
+    # Penalizes the robot for sliding feet while touching the ground
+    # This prevents abuse of simulation exploits, and prevents soles from scraping
+    # Category: Regularization
+    # Priority: Fine-Tuning (Weight = -0.1)
     feet_slide = RewTerm(
         func=mdp.feet_slide,
         params={
@@ -181,7 +231,9 @@ class RewardsCfg:
         weight=-0.1,
     )
 
-    # penalize undesired contacts
+    # Penalizes the robot for touching the ground with anything except feet
+    # Category: Safety/constraint
+    # Priority: Medium (Weight = -1.0)
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
         params={
