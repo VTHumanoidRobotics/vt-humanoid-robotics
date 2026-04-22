@@ -133,20 +133,21 @@ class RewardsCfg:
 
     # Rewards the robot for having a natural stance when walking (1 leg up, 1 leg down)
     # Requires one leg to be in air for at least 0.4s. Inactive when stationary.
+    # NOTE: This requires ankle_roll joint contact sensors which are NOT present on the 10-joint URDF robot model
     # Category: Task
     # Priority: Medium (Weight = +1.0)
-    feet_air_time = RewTerm(
-        func=mdp.feet_air_time_positive_biped,
-        params={
-            "command_name": "base_velocity",
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
-            "threshold": 0.4,
-        },
-        weight=1.0,
-    )
+    # feet_air_time = RewTerm(
+    #     func=mdp.feet_air_time_positive_biped,
+    #     params={
+    #         "command_name": "base_velocity",
+    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
+    #         "threshold": 0.4,
+    #     },
+    #     weight=1.0,
+    # )
 
     # === Safety/Constraint-Based Rewards ===
-    
+
     # A massive penalty for when the robot terminates an episode early (falling)
     # Administers a -10.0 penalty, which allows the robot to learn this is the
     # worst scenario and needs to be avoided.
@@ -238,16 +239,17 @@ class RewardsCfg:
 
     # Penalizes the robot for sliding feet while touching the ground
     # This prevents abuse of simulation exploits, and prevents soles from scraping
+    # NOTE: This requires ankle_roll joint contact sensors which are NOT present on the 10-joint URDF robot model
     # Category: Regularization
     # Priority: Fine-Tuning (Weight = -0.1)
-    feet_slide = RewTerm(
-        func=mdp.feet_slide,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*_ankle_roll"),
-        },
-        weight=-0.1,
-    )
+    # feet_slide = RewTerm(
+    #     func=mdp.feet_slide,
+    #     params={
+    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
+    #         "asset_cfg": SceneEntityCfg("robot", body_names=".*_ankle_roll"),
+    #     },
+    #     weight=-0.1,
+    # )
 
     # Penalizes the robot when hip joints deviate from default positioning
     # This helps keep the legs aligned and pointing forward under the body.
