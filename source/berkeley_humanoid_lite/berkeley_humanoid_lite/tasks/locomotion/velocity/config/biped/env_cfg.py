@@ -105,8 +105,12 @@ class ActionsCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    # === Reward for task-space performance ===
-    
+    # Positive Weight Total: +4.0
+    # Negative Weight Total: -14.662
+    # Net Balance: -10.662
+
+    # === Task-Based Rewards ===
+
     # Calculates how well the robot conforms to the commanded linear/forward velocity.
     # Returns +1.0 for perfect tracking (Error = 0)
     # Category: Task
@@ -127,7 +131,22 @@ class RewardsCfg:
         weight=1.0,
     )
 
-    # === Reward for basic behaviors ===
+    # Rewards the robot for having a natural stance when walking (1 leg up, 1 leg down)
+    # Requires one leg to be in air for at least 0.4s. Inactive when stationary.
+    # Category: Task
+    # Priority: Medium (Weight = +1.0)
+    feet_air_time = RewTerm(
+        func=mdp.feet_air_time_positive_biped,
+        params={
+            "command_name": "base_velocity",
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
+            "threshold": 0.4,
+        },
+        weight=1.0,
+    )
+
+    # === Safety/Constraint-Based Rewards ===
+    
     # A massive penalty for when the robot terminates an episode early (falling)
     # Administers a -10.0 penalty, which allows the robot to learn this is the
     # worst scenario and needs to be avoided.
@@ -138,10 +157,42 @@ class RewardsCfg:
         weight=-10.0,
     )
 
+    # Measures the tilt of the robot's body. Applies a strong -2.0 penalty
+    # to ensure the robot stays upright (centers mass, helps prevent falling)
+    # Category: Safety/constraint
+    # Priority: High (Weight = -2.0)
+    flat_orientation_l2 = RewTerm(
+        func=mdp.flat_orientation_l2,
+        weight=-2.0,
+    )
+
+    # Penalizes when the joints are near the position limits
+    # This encourages the robot to stay away from mechanical stops.
+    # Category: Safety/constraint
+    # Priority: Medium (Weight = -1.0)
+    dof_pos_limits = RewTerm(
+        func=mdp.joint_pos_limits,
+        weight=-1.0,
+    )
+
+    # Penalizes the robot for touching the ground with any limbs except feet
+    # Category: Safety/constraint
+    # Priority: Medium (Weight = -1.0)
+    undesired_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["base", ".*_hip_.*", ".*_knee_.*"]),
+            "threshold": 1.0,
+        },
+        weight=-1.0,
+    )
+
+    # === Regulatory Rewards ===
+
     # Measures the velocity on the z-axis (vertical bouncing/movement)
     # Administers a -0.1 penalty to encourage motion at constant height
     # Category: Regularization
-    # Priority: Fine-Tuning (Weight = -1.0)
+    # Priority: Fine-Tuning (Weight = -0.1)
     lin_vel_z_l2 = RewTerm(
         func=mdp.lin_vel_z_l2,
         weight=-0.1,
@@ -154,15 +205,6 @@ class RewardsCfg:
     ang_vel_xy_l2 = RewTerm(
         func=mdp.ang_vel_xy_l2,
         weight=-0.05,
-    )
-
-    # Measures the tilt of the robot's body. Applies a strong -2.0 penalty
-    # to ensure the robot stays upright (centers mass, helps prevent falling)
-    # Category: Safety/constraint
-    # Priority: High (Weight = -2.0)
-    flat_orientation_l2 = RewTerm(
-        func=mdp.flat_orientation_l2,
-        weight=-2.0,
     )
 
     # Penalizes rapid changes in the robot's actions
@@ -194,30 +236,6 @@ class RewardsCfg:
         weight=-1.0e-6,
     )
 
-    # Penalizes when the joints are near the position limits
-    # This encourages the robot to stay away from mechanical stops.
-    # Category: Safety/constraint
-    # Priority: Medium (Weight = -1.0)
-    dof_pos_limits = RewTerm(
-        func=mdp.joint_pos_limits,
-        weight=-1.0,
-    )
-
-    # === Reward for encouraging behaviors ===
-    # Rewards the robot for having a natural stance when walking (1 leg up, 1 leg down)
-    # Requires one leg to be in air for at least 0.4s. Inactive when stationary.
-    # Category: Task
-    # Priority: Medium (Weight = +1.0)
-    feet_air_time = RewTerm(
-        func=mdp.feet_air_time_positive_biped,
-        params={
-            "command_name": "base_velocity",
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
-            "threshold": 0.4,
-        },
-        weight=1.0,
-    )
-    
     # Penalizes the robot for sliding feet while touching the ground
     # This prevents abuse of simulation exploits, and prevents soles from scraping
     # Category: Regularization
@@ -229,18 +247,6 @@ class RewardsCfg:
             "asset_cfg": SceneEntityCfg("robot", body_names=".*_ankle_roll"),
         },
         weight=-0.1,
-    )
-
-    # Penalizes the robot for touching the ground with any limbs except feet
-    # Category: Safety/constraint
-    # Priority: Medium (Weight = -1.0)
-    undesired_contacts = RewTerm(
-        func=mdp.undesired_contacts,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["base", ".*_hip_.*", ".*_knee_.*"]),
-            "threshold": 1.0,
-        },
-        weight=-1.0,
     )
 
     # Penalizes the robot when hip joints deviate from default positioning
@@ -257,11 +263,11 @@ class RewardsCfg:
     # NOTE: This is NOT a joint that is present on the 3ft URDF robot model
     # Category: Regularization
     # Priority: Fine-Tuning (Weight = -0.2)
-    joint_deviation_ankle_roll = RewTerm(
-        func=mdp.joint_deviation_l1,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_ankle_roll_joint"])},
-        weight=-0.2,
-    )
+    # joint_deviation_ankle_roll = RewTerm(
+    #     func=mdp.joint_deviation_l1,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_ankle_roll_joint"])},
+    #     weight=-0.2,
+    # )
 
 
 @configclass
@@ -283,6 +289,7 @@ class EventsCfg:
     """Configuration for events."""
 
     # === Startup behaviors ===
+
     # Randomizes the static/dynamic friction (0.4 to 1.2) on startup,
     # which allows the sim2real to account for variations in material
     physics_material = EventTerm(
@@ -335,6 +342,7 @@ class EventsCfg:
     )
 
     # === Reset behaviors ===
+
     # Slightly varies x, y, and yaw starting positions (xy = -0.5m to +0.5 m; full yaw)
     # Also randomizes velocity because in reality it won't always start in a perfect position
     reset_base = EventTerm(
@@ -380,6 +388,7 @@ class EventsCfg:
     )
 
     # === Interval behaviors ===
+
     # Randomizes the interval between the simulated disturbances (velocity in this case)
     # This effectively acts like a push to the robot, and helps the sim2real account for
     # sporadic disturbances which helps the robustness of the model
