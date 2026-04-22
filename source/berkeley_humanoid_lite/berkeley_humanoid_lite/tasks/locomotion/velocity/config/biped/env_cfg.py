@@ -335,7 +335,8 @@ class EventsCfg:
     )
 
     # === Reset behaviors ===
-    # Slightly varies x, y, and yaw starting positions (xy = -0.5 to +0.5m)
+    # Slightly varies x, y, and yaw starting positions (xy = -0.5m to +0.5 m; full yaw)
+    # Also randomizes velocity because in reality it won't always start in a perfect position
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,
         params={
@@ -351,6 +352,9 @@ class EventsCfg:
         },
         mode="reset",
     )
+
+    # Randomizes the robot's joint positions at rest and helps it adapt to waking up in imperfect
+    # rest positions and initial posture (position range = +0.5m to +1.5m)
     reset_robot_joints = EventTerm(
         func=mdp.reset_joints_by_scale,
         mode="reset",
@@ -359,6 +363,10 @@ class EventsCfg:
             "velocity_range": (0.0, 0.0),
         },
     )
+
+    # Randomizes the external force and torque applied to the robot during reset so the
+    # simulation learns to withstand sudden disturbances and recover its balance
+    # Force range = -2.0 to +2.0; Torque range = -2.0 to +2.0
     base_external_force_torque = EventTerm(
         func=mdp.apply_external_force_torque,
         params={
@@ -372,6 +380,10 @@ class EventsCfg:
     )
 
     # === Interval behaviors ===
+    # Randomizes the interval between the simulated disturbances (velocity in this case)
+    # This effectively acts like a push to the robot, and helps the sim2real account for
+    # sporadic disturbances which helps the robustness of the model
+    # interval range = 10 to 15s; x/y velocity range = -1.0m to 1.0m
     # push_robot = EventTerm(
     #     func=mdp.push_by_setting_velocity,
     #     mode="interval",
