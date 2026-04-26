@@ -141,7 +141,7 @@ class RewardsCfg:
         func=mdp.feet_air_time_positive_biped,
         params={
             "command_name": "base_velocity",
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"), # change from roll to pitch
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="ankle_pitch.*"),
             "threshold": 0.4,
         },
         weight=1.0,
@@ -239,8 +239,8 @@ class RewardsCfg:
     feet_slide = RewTerm(
         func=mdp.feet_slide,
         params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll"),
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*_ankle_roll"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="ankle_pitch.*"),
+            "asset_cfg": SceneEntityCfg("robot", body_names="ankle_pitch.*"),
         },
         weight=-0.1,
     )
@@ -253,12 +253,7 @@ class RewardsCfg:
         weight=-0.2,
     )
     
-    # DELETE THIS : no ankle roll joint in the 3ft HRVT URDF
-    joint_deviation_ankle_roll = RewTerm(
-        func=mdp.joint_deviation_l1,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_ankle_roll_joint"])},
-        weight=-0.2,
-    )
+
 
 
 @configclass
