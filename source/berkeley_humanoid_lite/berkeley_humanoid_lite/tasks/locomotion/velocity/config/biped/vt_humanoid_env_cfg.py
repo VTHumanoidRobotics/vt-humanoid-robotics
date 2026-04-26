@@ -253,12 +253,6 @@ class RewardsCfg:
         weight=-0.2,
     )
     
-    # DELETE THIS : no ankle roll joint in the 3ft HRVT URDF
-    joint_deviation_ankle_roll = RewTerm(
-        func=mdp.joint_deviation_l1,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_ankle_roll_joint"])},
-        weight=-0.2,
-    )
 
 
 @configclass
